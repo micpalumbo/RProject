@@ -31,6 +31,15 @@ summary(fit2)
 modlag2 <- glmer(cases ~ 1 +raint2 + tavg2 + ITNind + IRSind + (1|DISTCODE), data = dat,
                  offset = log(u5total), family = poisson(link = "log"))
 summary(modlag2)
+m <- summary(modlag2)$coef
+m
+write.csv(m, "~/Documents/CU AMC Fall 2017/BIOS6640/Project/modresults.csv")
+library(knitr)
+kable(m)
+modlag2@beta # beta coefficients
+sqrt(diag(vcov(modlag2))) # standard errors for beta coefficients
+
+
 # AIC = 936736.2
 # this is the model I chose to interpret
 

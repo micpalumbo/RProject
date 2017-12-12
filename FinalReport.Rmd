@@ -12,17 +12,84 @@ fontsize: 12pt
 
 ## Background
 
-look up info about malaria, about the interventions, about the seasonal patterns and relationship with climate, lags with weather, incubation period, etc.
+Malaria is a mosquito-borne parasitic disease that is very common in Africa. In 2015 the estimated worldwide prevalence of malaria was 212 million cases (CDC). Symptoms of malaria include flu-like symptoms such as chills and fever. If malaria goes untreated it can become serious resulting in complications and potentially death. In 2015 it was estimated that 429,000 people died of malaria, primarily children in Africa (CDC). This illustrates the importance of studying the incidence of malaria in Africa and exploring possible interventions to decrease the number of malaria-related deaths.
+
+A few preventative methods that have been tested to reduce the incidence of malaria are insecticide-treated bed nets (ITNs) and indoor residual spraying (IRS). ITNs have been shown to reduce the all cause mortality rate of children under the age of 5 by about 20% (CDC). IRS became a controversial prevention method because of the concern over how spraying DDT might effect the environment. It has begun to gain more recent interest due to its success in South Africa at reducing malaria cases by more than 80% (CDC). In order to decrease the incidence of malaria it is important to understand they way it spreads. Malaria transmission is related to seasonal and weather patterns. For example, malaria transmission does not occur during cold seasons or in deserts, but transmission increases in warmer regions with higher temperatures (CDC). There is also a 7-14 day incubation period from exposure to the disease until the onset of symptoms. These factors need to be taken into account when planning preventative methods. We wish to explore the effectiveness of ITNs and IRS in minimizing cases of malaria. 
 
 ## Data and Methods
 
-describe the problem, describe the data cleaning/manipulation: merging datasets, creating lag variables, creating incidence variable, creating decay variables (say how much decayed), describe how will use data to solve problem
+The data was collected over 142 districts from 2010 - 2017. Each district had daily recordings of total rainfall, average temperature, relative humidity (rh), saturation vapor pressure deficit (sd), and barometric pressure (psfc). These were measured every day from 2010 - 2017. For each district we calculated weekly measurements. So for a district in our dataset we had a weekly total rainfall, average temperature, average sd, average rh, and average psfc for each week from 2010-2017. We combined the weather data for all districts. We then created lagged weather variables because we know that the weather variables are associated with malaria cases in a lagged fashion. We were give incidence data that had a district code and district name indicator, as well as an epiyear and epiweek variable. This dataset contained the number of cases of malaria in a given week in all of the districts from 2010-2017. We created an incidence variable by dividing the cases by the total population size and multiplying by 1000 to get an incidence with a scale of cases per 1000. We also had intervention data that contained the districts that received either ITN or IRS prevention and which week it occured. These 3 datasets were merged by district, epiweek, and epiyear. The format of the district names for the incidence data needed to be re-formatted to match the names of the districts in the weather data. We also created a linear decay effect for ITN and IRS. Based on the information provided to us, the linear decay rate for ITN was -0.004166667 and the linear decay rate for IRS was -0.01041667. We fit a Poisson mixed model to the data with cases as the outcome and 2-week lag rain total and average temperature variables as fixed predictors along with the decay effects of ITN and IRS as fixed predictors. We used a random intercept for district to account for correlation of repeated measurements within a district. 
 
 
 ## Results
 
+After data management was complete, we made plots to explore the data before fitting our model. We first looked at the distributions of the weather variables and the pairwise correlations between these variables (figure 1). We noticed that total rainfall appeared to be very positively skewed, but the rest of the variables seemed to be fairly normally distributed. Of the weather variables, sd and rh appeared to be the most correlated. 
 
+### Figure 1: Initial Exploratory Plots
+\begin{center}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/rawhist.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/alldatsplomfinal.png}
+\end{center}
+
+Before analysis we also wanted to explore the changes in total rainfall and average temperature from year to year. We created boxplots for these variables for each year (figure 2). Looking at the plots, total rainfall or average temperature change did not appear to change much from year to year, so we were comfortable not accounting for the effect of year in our model. 
+
+### Figure 2: Total Rainfall and Average Temperature Across Years
+\begin{center}
+\includegraphics[width=9cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/tempbp.png}
+\includegraphics[width=9cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/rainbp.png}
+\end{center}
+
+We then began to explore the relationships between the weather variables and incidence. Our goal was to compare the relationships of incidence and the weather variables with different lag amounts in order to identify the lag that seemed to best match the trend in incidence over time. Based on the plots seen in figure 3, it appeared to us that the 2-week lag best matched the trend of incidence over time, which was why this lag was chosen for the final model. 
+
+### Figure 3: Malaria Incidence, Average Temp, and Total Rainfall Across Weeks
+\begin{center}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/incidnolag.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/incid2lag.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/incidlag4.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/incidlag8.png}
+\end{center}
+
+The results of the final model can be seen in Table 1 below. The number of malaria cases significantly decreased by about `r round((1 - exp(-0.045))*100, 2)`% (p < 0.0001) in the presence of ITNs. The number of malaria cases significantly decreased by about `r round((1 - exp(-0.023))*100, 2)`% (p < 0.0001) in the presence of IRS. The 2-week lag of total rainfall and 2-week lag of average temperature were also significantly associated with cases of malaria. 
+
+```{r echo=FALSE}
+library(knitr)
+tab <- read.csv("~/Documents/CU AMC Fall 2017/BIOS6640/Project/modresults.csv")
+kable(tab, caption = "Fixed Effects of Model")
+```
+
+In addition to our analysis of the effectiveness of ITN and IRS to reduce malaria cases, we also wanted to explore some geographical climate trends. We plotted maps of total rainfall and average temperature across the districst for years 2010 and 2016 (figures 4 and 5). We chose to map years 2010 and 2016 to explore whether the geographical trends in rainfall and temperature across Mozambique had changed over time. Based on these plots there do appear to be some geographical differences in total rainfall between years 2010 and 2016. However, average temperature across Mozambique appears to be pretty similar when comparing 2010 and 2016. 
+
+### Figure 4: Total Rainfall Across Mozambique in 2010 and 2016
+\begin{center}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/raintotmap10.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/raintotmapfinal16.png}
+\end{center}
+
+### Figure 5: Average Temperature Across Mozambique in 2010 and 2016
+\begin{center}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/tempmap10.png}
+\includegraphics[width=8cm]{~/Documents/CU AMC Fall 2017/BIOS6640/Project/RProject/plots/tempmapfinal16.png}
+\end{center}
 
 ## Conclusions
 
+Based on the results of our model, we can conclude that both ITNs and IRS are associated with statistically significant decreases in malaria cases. ITns were shown to decrease the number of malaria cases by about `r round((1 - exp(-0.045))*100, 2)`% and IRS was shown to decrease the number of malaria cases by about `r round((1 - exp(-0.023))*100, 2)`%. Though these decreases are statistically significant, they may not be large enough to be clinically meaningful. Experts in the field will need to consider whether the size of these decreases are clinically significant, especially given the cost of putting these preventative methods in place. We should also be careful to interpret the results of this model. The model interpreted was nearly unidentifiable and had very large eigenvalues, so the estimates and standard errors may not be accurate. Moving forward, it would be beneficial to work with an analyst that has more experience in fitting Generalized Linear Mixed Models in order to create a model with improved convergence.  
+
 ## References
+
+Malaria. (2017, December 06). Retrieved December 12, 2017, from https://www.cdc.gov/MALARIA/
+
+Insecticide-Treated Bed Nets. (2017, December 06). Retrieved December 12, 2017, from https://www.cdc.gov/MALARIA/
+
+Indoor Residual Spraying. (2017, December 06). Retrieved December 12, 2017, from https://www.cdc.gov/MALARIA/
+
+Where Malaria Occurs. (2017, December 06). Retrieved December 12, 2017, from https://www.cdc.gov/MALARIA/
+
+Weather data retrieved from: http://rap.ucar.edu/staff/monaghan/colborn/mozambique/daily/v2/
+
+Collaboration on data analysis with Alyssa Forber and  Melissa Wilson.
+
+Link to my github with all my code: https://github.com/micpalumbo
+The name of the repository for this project is called "RProject". This repository has a readme.md file that describes the files in this repository and can be used to help you navigate the files.
+
+

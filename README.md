@@ -6,10 +6,16 @@ DataClean.R - loads the data, scrapes the weather data from the website and crea
 
 DataMerge.R - merges the weather data with incident and intervention data, does some data cleaning like creating lag variables, creates an output merged dataset
 
-Decay.R - creates the decay variables for ITN and IRS interventions, creates an output final dataset
+Decay.R - creates the decay effect for the variables for ITN and IRS interventions, creates an output final dataset
 
 Exploratory.R - data exploration, creates graphics, does descriptive stats, etc.
 
-ITNdecayExample2.R - code provided by Katie for example of decay
+FinalReport.Rmd - final written report for the project
 
-Models.R - contains models run for analyzing data set and relationship of variables with malaria incidence
+FinalReport.pdf - pdf version of final report created by the .Rmd file
+
+ITNdecayExample2.R - code provided by Katie for example of decay, I added comments to understand what was happening in the code for when I recreated it in my file
+
+Models.R - contains models run for analyzing data set with poisson regression and cases as outcome 
+
+Plots folder - contains images of all plots created to include in the report and supplement

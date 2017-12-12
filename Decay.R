@@ -7,11 +7,18 @@
 # load cleaned and merged dataset
 datm <- read.csv("~/Documents/CU AMC Fall 2017/BIOS6640/Project/CleanMerged.csv")
 datm$X <- NULL # unnecessary X column
-summary(datm)
-# why does my merged data only have 131 levels now instead of 142?
-# 43492
-sum(datm$IRSind) # 35
-sum(datm$ITNind) # 114
+
+# why does my merged data only have 131 levels for district now instead of 142?
+# fixed above problem - see merged dataset
+# the inc data had some different formatting for district names so they weren't all matching up
+# with weather district names when merging - resolved the issue in DataMerge
+str(datm$District)
+str(datm$DISTCODE)
+length(unique(datm$District)) # now have 142 districts
+length(unique(datm$DISTCODE))
+# 47144
+sum(datm$IRSind) # 38
+sum(datm$ITNind) # 125
 
 ## creating decay variables ##
 
@@ -84,6 +91,9 @@ for(i in 1:n.distr) {
     datm[ind.i,][ind.IRS,][ind.sort,]$IRSind <- IRSeff(datm[ind.i,][ind.IRS,][ind.sort,]$time-min.t)
   }
 }
+
+# check
+datm[which(datm$DISTCODE==302),]$ITNind
 
 # save this final dataset
 write.csv(datm, "~/Documents/CU AMC Fall 2017/BIOS6640/Project/FinalData.csv")
