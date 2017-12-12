@@ -7,94 +7,84 @@
 # load cleaned and merged dataset
 datm <- read.csv("~/Documents/CU AMC Fall 2017/BIOS6640/Project/CleanMerged.csv")
 datm$X <- NULL # unnecessary X column
+summary(datm)
 # why does my merged data only have 131 levels now instead of 142?
-# 51876 observations?
+# 43492
 sum(datm$IRSind) # 35
-sum(datm$ITNind) # 141
+sum(datm$ITNind) # 114
 
-# uses/modifies code provided by Katie in ITNdecayExample2.R
+## creating decay variables ##
 
-# create time column
-datm$time <- (datm$Epiyear-2010)*12 + datm$Epiweek
+## adapted from code provide by Katie in the file ITNdecayExample2.R ##
 
-# make difference from IRS intervention with current data
-datm2 <- NULL
+## create time column to index all weeks measured from 2010 to 2017
+datm$time <- (datm$Epiyear-2010)*52 + datm$Epiweek
 
-for(i in levels(datm$District)){
-  df <- subset(datm, datm$District %in% i)
-  timeIRS <- df$time[df$IRSind==1]
-  df[, "decayIRS"] <- NA
-  
-  if(length(timeIRS)==1){
-    
-    for(j in 1:dim(df)[1]){
-      if(df[j,]$time >= timeIRS){
-        df[j,]$decayIRS <- df[j,]$time - timeIRS
-      }
-    }
-    
-  } else if(length(timeIRS)==2){
-    for(j in 1:dim(df)[1]){
-      if(df[j,]$time >= timeIRS[1] & df[j,]$time < timeIRS[2]){
-        df$decayIRS <- df[j,]$time - timeIRS[1]
-      } else if(df[j,]$time >= timeIRS[2]){
-        df$decayIRS <- df[j,]$time - timeIRS[2]
-      } else{
-        
-      }
-    }
-  } else{
-    
+datm[1:100, c(2, 3, 12, 13, 30)] # checking out some of the data
+
+# number of unique districts (131)
+n.distr <- length(unique(datm$DISTCODE)) 
+
+# vector of the unique district codes
+unique.distcode <- unique(datm$DISTCODE)
+
+# creating rate of decay function for ITN
+# 60% protection at 24 months (96weeks)
+0.4/96 # decay rate = 0.004166667
+1/0.004166667 # intervention week where will get down to 0% effective = 240
+
+ITNeff <- function(x){
+  if(x<0) stop("x cannot be negative")
+  if(x>240){
+    return(0)
+  }else{
+    1 - 0.00416667*x
   }
-  datm2 <- rbind(datm2, df)
-  
 }
 
-sum(datm2$IRS) # still 35
-sum(datm2$ITN) # still 141
+ITNeff <- Vectorize(ITNeff, "x")
 
-# make difference from ITN intervention with current data
-# change all datm2 to datm3 and all datm to datm2 and all IRS to ITN
-datm3 <- NULL
+# creating rate of decay function IRS
+# 75% protection at 6 months (24 weeks)
+0.25/24 # decay rate = 0.01041667
+1/0.01041667 # intervention week where will get down to 0% effective = 96
 
-for(i in levels(datm2$District)){
-  df <- subset(datm2, datm2$District %in% i)
-  timeITN <- df$time[df$ITNind==1]
-  df[, "decayITN"] <- NA
-  
-  if(length(timeITN)==1){
-    
-    for(j in 1:dim(df)[1]){
-      if(df[j,]$time >= timeITN){
-        df[j,]$decayITN <- df[j,]$time - timeITN
-      }
-    }
-    
-  } else if(length(timeITN)==2){
-    for(j in 1:dim(df)[1]){
-      if(df[j,]$time >= timeITN[1] & df[j,]$time < timeITN[2]){
-        df$decayITN <- df[j,]$time - timeITN[1]
-      } else if(df[j,]$time >= timeITN[2]){
-        df$decayITN <- df[j,]$time - timeITN[2]
-      } else{
-        
-      }
-    }
-  } else{
-    
+IRSeff <- function(x){
+  if(x<0) stop("x cannot be negative")
+  if(x>96){
+    return(0)
+  }else{
+    1 - 0.01041667*x
   }
-  datm3 <- rbind(datm3, df)
-  
 }
 
-summary(datm3)
-# lots of NAs for the decay variables 
+IRSeff <- Vectorize(IRSeff, "x")
+
+## create the decay effect of IRS and ITN variables by looping through distict
+# for details explaining refer to comments added to ITNdecayExample2.R
+
+## decay for ITN ##
+for(i in 1:n.distr) {
+  ind.i <- which(datm$DISTCODE==unique.distcode[i]) 
+  ind.ITN <- which(datm[ind.i,]$ITNind==1) 
+  if(length(ind.ITN)>0) {
+    ind.sort <- sort.list(datm[ind.i,][ind.ITN,]$time) 
+    min.t <- min(datm[ind.i,][ind.ITN,][ind.sort,]$time)
+    datm[ind.i,][ind.ITN,][ind.sort,]$ITNind <- ITNeff(datm[ind.i,][ind.ITN,][ind.sort,]$time-min.t)
+  }
+}
+
+## decay for IRS ##
+for(i in 1:n.distr) {
+  ind.i <- which(datm$DISTCODE==unique.distcode[i]) 
+  ind.IRS <- which(datm[ind.i,]$IRSind==1) 
+  if(length(ind.IRS)>0) {
+    ind.sort <- sort.list(datm[ind.i,][ind.IRS,]$time) 
+    min.t <- min(datm[ind.i,][ind.IRS,][ind.sort,]$time)
+    datm[ind.i,][ind.IRS,][ind.sort,]$IRSind <- IRSeff(datm[ind.i,][ind.IRS,][ind.sort,]$time-min.t)
+  }
+}
 
 # save this final dataset
-write.csv(datm3, "~/Documents/CU AMC Fall 2017/BIOS6640/Project/FinalData.csv")
+write.csv(datm, "~/Documents/CU AMC Fall 2017/BIOS6640/Project/FinalData.csv")
 
-# things to ask Alyssa:
-# why she subtracted by 2009 instead of 2010 for her time variable
-# different total ITNs
-# different total obs
-# since we're adding epiweek not month should we still be multiplying by 12?

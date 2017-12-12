@@ -1,0 +1,28 @@
+---
+title: "BIOS 6640 Final Project"
+author: "Michaela Palumbo"
+header-includes:
+  - \usepackage{setspace}\doublespacing
+  - \setlength\parindent{24pt}\setlength{\parskip}{0.0pt plus 1.0pt}
+  - \usepackage{indentfirst}
+date: "December 12, 2017"
+output: pdf_document
+fontsize: 12pt
+---
+
+## Background
+
+look up info about malaria, about the interventions, about the seasonal patterns and relationship with climate, lags with weather, incubation period, etc.
+
+## Data and Methods
+
+describe the problem, describe the data cleaning/manipulation: merging datasets, creating lag variables, creating incidence variable, creating decay variables (say how much decayed), describe how will use data to solve problem
+
+
+## Results
+
+
+
+## Conclusions
+
+## References
